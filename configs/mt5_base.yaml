@@ -1,0 +1,129 @@
+# ============================================================================
+# Safe-default configuration: mT5-base (580M parameters)
+# ============================================================================
+# 
+# HARDWARE REQUIREMENTS:
+# - Minimum: 12 GB GPU VRAM (RTX 3060, GTX 1080 Ti, Colab T4)
+# - Recommended: 16 GB GPU VRAM (RTX 4060, RTX 3060 Ti, A4000)
+# - Training time: ~2-3 hours on T4, ~1 hour on V100/A100
+#
+# DESIGN RATIONALE:
+# - Model size: mt5-base (580M) chosen as safe baseline that fits most GPUs
+# - Batch size: 4 with accumulation 4 = effective batch 16 (stable training)
+# - Precision: bf16 preferred over fp16 for numerical stability in seq2seq
+# - Gradient checkpointing: enabled to reduce memory at cost of ~20% speed
+# - Early stopping: patience 2 to prevent overfitting on English subsets
+#
+# EXPECTED PERFORMANCE:
+# - ROUGE-1: ~0.65 (baseline, not competition-winning)
+# - ROUGE-L: ~0.58
+# - Use mt5_large.yaml for leaderboard-competitive scores
+# ============================================================================
+
+# ============================================================================
+# PATH CONFIGURATION
+# ============================================================================
+# All paths relative to repository root for reproducibility across environments
+data_dir: data
+output_dir: artifacts/mt5_base
+submission_path: artifacts/mt5_base/submission.csv
+
+# ============================================================================
+# MODEL CONFIGURATION
+# ============================================================================
+# RATIONALE: mT5-base provides good multilingual performance while fitting
+# in 12GB GPU memory. mT5 is pre-trained on multilingual tasks including
+# translation, making it ideal for cross-lingual QA.
+model_name: google/mt5-base
+
+# ============================================================================
+# SEQUENCE LENGTH CONFIGURATION
+# ============================================================================
+# EDA-BACKED DECISIONS:
+# - max_input_length: 256 tokens covers 95th percentile of questions (EDA result)
+# - max_target_length: 512 tokens covers 99th percentile of answers (max=482 words)
+# These balances memory usage vs coverage of training data distribution
+max_input_length: 256
+max_target_length: 512
+
+# ============================================================================
+# PROMPT CONSTRUCTION
+# ============================================================================
+# EXPERIMENTAL VALIDATION: "lang_prefix" format outperforms "bare" and
+# "instruction" formats in controlled experiments (see exp04 in experiments.py)
+# Format: "<Language>: <question>" conditions model on output language
+#
+# retrieval_augment: False for baseline; True enables retrieval-augmented
+# generation which provides nearest canonical answer as soft exemplar
+
+# ============================================================================
+# OPTIMIZATION CONFIGURATION
+# ============================================================================
+# LEARNING RATE: 5e-4 is higher than BERT-family (typically 2-3e-5) because
+# mT5 uses T5-style initialization which benefits from more aggressive LR.
+# Empirically validated on similar multilingual seq2seq tasks.
+#
+# BATCH SIZE STRATEGY: per_device_batch=4, accumulation=4 gives effective
+# batch size of 16. This provides stable gradient estimates while fitting
+# in GPU memory. Larger effective batches improve generalization.
+#
+# EPOCHS: 3 epochs provides good convergence on this dataset size (~30k samples).
+# More epochs risk overfitting English subsets (which dominate training data).
+learning_rate: 5.0e-4
+num_train_epochs: 3
+per_device_train_batch_size: 4
+per_device_eval_batch_size: 8
+gradient_accumulation_steps: 4  # Effective batch = 4 * 4 = 16
+weight_decay: 0.01               # L2 regularization
+warmup_ratio: 0.05               # 5% of steps for LR warmup
+label_smoothing_factor: 0.0      # No label smoothing (set to 0.1 for mt5_large)
+seed: 42                         # Reproducibility
+
+# ============================================================================
+# PRECISION & HARDWARE CONFIGURATION
+# ============================================================================
+# bf16_if_supported: Use bfloat16 on Ampere GPUs (RTX 30xx, A100) for better
+# numerical stability than fp16. Falls back to fp16 on Volta/Turing, fp32 on CPU.
+#
+# gradient_checkpointing: Recomputes activations during backward pass, trading
+# 20% speed for 50% memory reduction. Essential for fitting large batches.
+bf16_if_supported: true
+gradient_checkpointing: true
+
+# ============================================================================
+# VALIDATION & CHECKPOINTING
+# ============================================================================
+# val_size: 5% stratified holdout preserves language distribution for monitoring
+# metric_for_best_model: eval_rougeL selects best generator, not lowest loss
+# eval_max_samples: Caps generation cost during training (1500 samples = ~5 min)
+# early_stopping_patience: 2 epochs without improvement prevents overfitting
+val_size: 0.05
+eval_strategy: epoch
+save_strategy: epoch
+load_best_model_at_end: true
+metric_for_best_model: eval_rougeL
+greater_is_better: true
+early_stopping_patience: 2
+predict_with_generate: true
+eval_max_samples: 1500
+
+# ============================================================================
+# DECODING (INFERENCE) CONFIGURATION
+# ============================================================================
+# num_beams: 4 provides good diversity/quality tradeoff. Higher beams improve
+# quality but scale linearly with inference time.
+# length_penalty: 1.0 = neutral. Values > 1 favor longer outputs (appropriate
+# for this task where answers are detailed health information).
+# no_repeat_ngram_size: 3 prevents repeating 3-grams, improving fluency.
+num_beams: 4
+length_penalty: 1.0
+no_repeat_ngram_size: 3
+
+# ============================================================================
+# HYBRID RETRIEVAL FALLBACK
+# ============================================================================
+# hybrid_fallback: False for baseline. When True, if generation produces
+# very short output (<5 chars), fall back to retrieval-based answer.
+# This protects against model collapse on difficult inputs.
+hybrid_fallback: false
+hybrid_min_gen_chars: 5

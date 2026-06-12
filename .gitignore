@@ -1,0 +1,25 @@
+# Model artifacts & checkpoints (regenerate with scripts.train)
+artifacts/
+*.log
+artifacts_smoke.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+.venv/
+venv/
+
+# OS
+.DS_Store
+
+# Large raw download dir (data lives in data/)
+multilingual-health-question-answering-in-low-resource-african-languages-challenge*/
+
+# Keep data CSVs out of git if you prefer (they are 23 MB); uncomment to ignore:
+# data/*.csv
+
+# HF / torch caches
+.cache/

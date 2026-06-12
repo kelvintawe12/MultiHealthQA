@@ -1,0 +1,2 @@
+submission,date,experiment_key,description,public_rougeL,public_rouge1,public_llm,notes
+1,,exp01_retrieval_baseline,TF-IDF retrieval floor,,,,seed row — fill in after each Zindi submission

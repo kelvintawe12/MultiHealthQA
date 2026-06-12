@@ -1,0 +1,126 @@
+# ============================================================================
+# Anchor configuration: mT5-large (1.2B parameters) - Leaderboard-competitive
+# ============================================================================
+#
+# HARDWARE REQUIREMENTS:
+# - Minimum: 16 GB GPU VRAM (RTX 4080, RTX 3080 Ti, A4000, A5000)
+# - Recommended: 24 GB GPU VRAM (RTX 3090, RTX 4090, A6000)
+# - Training time: ~6-12 hours depending on GPU model
+#
+# CRITICAL DESIGN DECISION: ADAFACTOR OPTIMIZER
+# - AdamW would require ~19 GB optimizer state for mt5-large (total ~30 GB VRAM)
+# - Adafactor requires <1 GB optimizer state (total ~12 GB VRAM)
+# - This enables mt5-large training on 16 GB GPUs
+# - Adafactor is the optimizer used in the original T5/mT5 paper
+# - Tradeoff: Slightly slower convergence than AdamW, but enables larger model
+#
+# EXPECTED PERFORMANCE (leaderboard target):
+# - ROUGE-1: ~0.72 (competition target)
+# - ROUGE-L: ~0.65 (competition target)
+# - LLM-Judge: ~0.85 (estimated based on fluency improvements)
+#
+# KEY DIFFERENCES FROM mt5_base.yaml:
+# - Larger model (1.2B vs 580M parameters)
+# - More epochs (4 vs 3) for better low-resource language adaptation
+# - Adafactor optimizer (memory efficiency)
+# - Higher learning rate (1e-3 vs 5e-4) for Adafactor convergence
+# - Label smoothing (0.1) for better fluency
+# - Hybrid fallback enabled for robustness
+# ============================================================================
+
+# ============================================================================
+# PATH CONFIGURATION
+# ============================================================================
+data_dir: data
+output_dir: artifacts/mt5_large
+submission_path: artifacts/mt5_large/submission.csv
+
+# ============================================================================
+# MODEL CONFIGURATION
+# ============================================================================
+# mT5-large (1.2B parameters) provides significantly better multilingual
+# understanding than mt5-base, especially important for low-resource languages
+# (Amharic, Luganda, Akan) which have limited training data.
+model_name: google/mt5-large
+
+# ============================================================================
+# SEQUENCE LENGTH CONFIGURATION
+# ============================================================================
+# Same as mt5_base - based on EDA percentile analysis
+max_input_length: 256
+max_target_length: 512
+
+# ============================================================================
+# PROMPT CONFIGURATION
+# ============================================================================
+# lang_prefix format experimentally validated as optimal (see experiments.py)
+prompt_style: lang_prefix
+retrieval_augment: false
+
+# ============================================================================
+# OPTIMIZATION CONFIGURATION
+# ============================================================================
+# ADAFACTOR OPTIMIZER SETTINGS:
+# - learning_rate: 1e-3 is higher than typical AdamW rates because Adafactor
+#   uses per-parameter learning rates that scale with parameter magnitude
+# - eps: (1e-30, 1e-3) are standard Adafactor epsilon values
+# - clip_threshold: 1.0 prevents gradient explosion
+# - decay_rate: -0.8 is the T5 paper's recommended decay rate
+# - beta1: None (no momentum) saves additional memory
+#
+# EPOCHS: 4 epochs instead of 3 to give low-resource languages more
+# adaptation time, with early stopping to prevent English overfitting
+optimizer: adafactor
+learning_rate: 1.0e-3
+num_train_epochs: 4
+per_device_train_batch_size: 2          # Smaller per-device batch for larger model
+per_device_eval_batch_size: 4
+gradient_accumulation_steps: 8           # Effective batch = 2 * 8 = 16
+weight_decay: 0.01
+warmup_ratio: 0.05
+label_smoothing_factor: 0.1           # Improves fluency and LLM-judge scores
+seed: 42
+
+# ============================================================================
+# ADAFACTOR-SPECIFIC PARAMETERS
+# ============================================================================
+# These are standard T5 paper hyperparameters for Adafactor optimizer
+adafactor_eps: [1e-30, 1e-3]
+adafactor_clip_threshold: 1.0
+adafactor_decay_rate: -0.8
+adafactor_beta1: null                    # No momentum (saves memory)
+
+# ============================================================================
+# PRECISION & HARDWARE
+# ============================================================================
+bf16_if_supported: true                 # Use bfloat16 on Ampere GPUs
+gradient_checkpointing: true              # Essential for 16GB GPU memory
+
+# ============================================================================
+# VALIDATION & CHECKPOINTING
+# ============================================================================
+val_size: 0.05
+eval_strategy: epoch
+save_strategy: epoch
+load_best_model_at_end: true
+metric_for_best_model: eval_rougeL
+greater_is_better: true
+early_stopping_patience: 2
+predict_with_generate: true
+eval_max_samples: 1500
+
+# ============================================================================
+# DECODING CONFIGURATION
+# ============================================================================
+# num_beams: 5 (vs 4 in base) for better quality on larger model
+# length_penalty: 1.1 favors longer outputs (appropriate for detailed health answers)
+num_beams: 5
+length_penalty: 1.1
+no_repeat_ngram_size: 3
+
+# ============================================================================
+# HYBRID RETRIEVAL FALLBACK
+# ============================================================================
+# Enabled in mt5_large for robustness against generation collapse
+hybrid_fallback: true
+hybrid_min_gen_chars: 5
