@@ -70,6 +70,7 @@ class Config:
 
     # --- Validation / checkpointing ---
     val_size: float = 0.05
+    max_train_samples: int = None
     eval_strategy: str = "epoch"
     save_strategy: str = "epoch"
     load_best_model_at_end: bool = True

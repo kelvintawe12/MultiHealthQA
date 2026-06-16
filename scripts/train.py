@@ -34,15 +34,15 @@ def main() -> None:
         overrides["model_name"] = args.model
     cfg = load_config(args.config, **overrides)
 
-    print(f"▶ Training {cfg.model_name}  (run={cfg.run_name})")
+    print(f"Training {cfg.model_name}  (run={cfg.run_name})")
     trainer, tokenizer = train(cfg)
 
-    print("\n▶ Scoring held-out split...")
+    print("\nScoring held-out split...")
     holdout = holdout_for(cfg)
     overall, per_lang, _ = evaluate_model(
         trainer.model, tokenizer, holdout, cfg, batch_size=args.eval_batch_size
     )
-    print(f"\n📊 Holdout ROUGE-1={overall['rouge1_f1']:.4f}  "
+    print(f"\nHoldout ROUGE-1={overall['rouge1_f1']:.4f}  "
           f"ROUGE-L={overall['rougeL_f1']:.4f}  combined={overall['combined']:.4f}")
     if not per_lang.empty:
         print("\nPer-language (weakest first):")

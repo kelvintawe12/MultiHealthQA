@@ -90,7 +90,7 @@ def _create_optimizer(cfg, model):
             relative_step=False,
         )
     else:  # adamw (default)
-        from transformers import AdamW
+        from torch.optim import AdamW
         return AdamW(model.parameters(), lr=cfg.learning_rate, weight_decay=cfg.weight_decay)
 
 
@@ -117,6 +117,8 @@ def train(cfg: Config, *, train_df=None, holdout_df=None):
 
     if train_df is None or holdout_df is None:
         full = load_split(cfg.train_path, has_answer=True)
+        if cfg.max_train_samples:
+            full = full.head(cfg.max_train_samples).reset_index(drop=True)
         train_df, holdout_df = stratified_split(full, cfg.val_size, cfg.seed)
 
     # Cap the (expensive) generation-based eval to keep per-epoch ROUGE cheap.
