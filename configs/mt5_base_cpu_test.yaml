@@ -5,8 +5,8 @@
 # Uses tiny dataset and minimal parameters for quick validation
 
 data_dir: data
-output_dir: artifacts/mt5_base_full_3epochs_fast
-submission_path: artifacts/mt5_base_full_3epochs_fast/submission.csv
+output_dir: artifacts/mt5_base_full_3epochs_with_retrieval
+submission_path: artifacts/mt5_base_full_3epochs_with_retrieval/submission.csv
 
 model_name: google/mt5-base
 
@@ -14,7 +14,7 @@ max_input_length: 128
 max_target_length: 256
 
 prompt_style: lang_prefix
-retrieval_augment: false
+retrieval_augment: true
 
 optimizer: adamw
 learning_rate: 5.0e-4
@@ -52,5 +52,5 @@ no_repeat_ngram_size: 3
 hybrid_fallback: false
 hybrid_min_gen_chars: 5
 
-run_name: mt5_base_full_3epochs_fast
-notes: Fast training: mt5-base, full dataset, 3 epochs for deadline
+run_name: mt5_base_full_3epochs_with_retrieval
+notes: Fast training: mt5-base, full dataset, 3 epochs with retrieval augmentation
