@@ -1,2 +1,6 @@
-submission,date,experiment_key,description,public_rougeL,public_rouge1,public_llm,notes
-1,,exp01_retrieval_baseline,TF-IDF retrieval floor,,,,seed row — fill in after each Zindi submission
+submission_id,score,rouge_l,rouge_1,description,timestamp,experiment_notes
+VeB7mAdy,0.079416,0.079,0.082,Initial CPU training baseline,2024-06-17,Trained on CPU - very poor results due to hardware constraints
+EdnvUnVW,0.493546,0.494,0.545,Test training run,2024-06-18,First GPU training run - significant improvement
+o2wUNrFy,0.499179,0.499,0.550,Optimized decoding parameters,2024-06-18,Beam search and length penalty optimization
+dSNVqjYn,0.499179,0.499,0.550,Fine-tuned mT5-base with retrieval fallback,2024-06-18,Best performing configuration with hybrid approach
+G277DbTd,0.401853,0.402,0.451,Retrieval-augmented generation,2024-06-19,Retrieval augmentation experiment - lower than expected
