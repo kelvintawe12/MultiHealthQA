@@ -5,10 +5,10 @@
 # Uses tiny dataset and minimal parameters for quick validation
 
 data_dir: data
-output_dir: artifacts/mt5_small_full_dataset_5epochs
-submission_path: artifacts/mt5_small_full_dataset_5epochs/submission.csv
+output_dir: artifacts/mt5_base_full_3epochs_fast
+submission_path: artifacts/mt5_base_full_3epochs_fast/submission.csv
 
-model_name: google/mt5-small
+model_name: google/mt5-base
 
 max_input_length: 128
 max_target_length: 256
@@ -18,10 +18,10 @@ retrieval_augment: false
 
 optimizer: adamw
 learning_rate: 5.0e-4
-num_train_epochs: 5
-per_device_train_batch_size: 4
-per_device_eval_batch_size: 4
-gradient_accumulation_steps: 1
+num_train_epochs: 3
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 2
+gradient_accumulation_steps: 2
 # Reduce memory pressure on CPU even for the tiny test.
 # (We can’t use max_train_steps/max_eval_steps here because Config doesn’t define them.)
 
@@ -52,5 +52,5 @@ no_repeat_ngram_size: 3
 hybrid_fallback: false
 hybrid_min_gen_chars: 5
 
-run_name: mt5_small_full_dataset_5epochs
-notes: Full dataset training on Colab GPU with 5 epochs
+run_name: mt5_base_full_3epochs_fast
+notes: Fast training: mt5-base, full dataset, 3 epochs for deadline
