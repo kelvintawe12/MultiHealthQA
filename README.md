@@ -1,7 +1,5 @@
 # Multilingual Health Question Answering in Low-Resource African Languages
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kelvintawe12/MultiHealthQA/blob/main/notebooks/MultiHealthQA_end_to_end.ipynb)
-
 This project implements a multilingual question answering system for health-related questions in low-resource African languages (Akan, Luganda, Swahili, Amharic, and English) as part of the Zindi MSRH Challenge.
 
 ## Project Overview
@@ -15,7 +13,6 @@ The goal of this project is to build models capable of answering health question
 
 ## Competition Details
 
-- **Competition**: [Zindi Multilingual Health Question Answering Challenge](https://zindi.africa/competitions/multilingual-health-question-answering-in-low-resource-african-languages-challenge)
 - **Languages**: English, Akan, Luganda, Swahili, Amharic
 - **Task**: Generate health answers in the appropriate language based on the question
 - **Metrics**: ROUGE-1 F1, ROUGE-L F1, LLM-as-a-Judge
@@ -54,7 +51,7 @@ pip install -r requirements.txt
 
 ### Google Colab Setup
 
-1. Open the [Colab notebook](https://colab.research.google.com/github/kelvintawe12/MultiHealthQA/blob/main/notebooks/MultiHealthQA_end_to_end.ipynb)
+1. 
 2. Run the setup cells to clone the repository and install dependencies
 3. Upload your data files to the `data/` directory
 4. Execute the notebook cells sequentially
@@ -313,5 +310,3 @@ This project is part of an academic submission. Please contact the author for us
 For questions about this project, please contact Kelvin Tawe.
 
 ---
-
-**Note**: This project was developed as a final project for the Machine Learning Techniques I course. The code demonstrates experimentation with multilingual NLP, fine-tuning strategies, and evaluation methodologies for low-resource languages.
